@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal To-Do List</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100">
+
+    <div class="max-w-2xl mx-auto px-4 py-10">
+
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800">
+                📚 Personal To-Do List
+            </h1>
+            <p class="text-gray-600 mt-2">
+                Organize your academic and personal tasks
+            </p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-white rounded-2xl shadow-xl p-6">
+
+            <!-- Add Task Form -->
+            <form id="taskForm" class="flex flex-col sm:flex-row gap-3 mb-6">
+
+                <input
+                    type="text"
+                    id="taskInput"
+                    placeholder="Enter a task..."
+                    class="flex-1 border border-gray-300 rounded-lg px-4 py-3
+                           focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                >
+
+                <select
+                    id="categoryInput"
+                    class="border border-gray-300 rounded-lg px-4 py-3
+                           focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    <option value="Academic">Academic</option>
+                    <option value="Personal">Personal</option>
+                </select>
+
+                <button
+                    type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white
+                           font-semibold px-5 py-3 rounded-lg transition"
+                >
+                    Add Task 
+                </button>
+            </form>
+
+            <!-- Task Statistics -->
+            <div class="grid grid-cols-3 gap-3 mb-6 text-center">
+                <div class="bg-blue-50 rounded-lg p-3">
+                    <p class="text-sm text-gray-500">Total</p>
+                    <p id="totalTasks" class="text-xl font-bold text-blue-600">0</p>
+                </div>
+
+                <div class="bg-yellow-50 rounded-lg p-3">
+                    <p class="text-sm text-gray-500">Active</p>
+                    <p id="activeTasks" class="text-xl font-bold text-yellow-600">0</p>
+                </div>
+
+                <div class="bg-green-50 rounded-lg p-3">
+                    <p class="text-sm text-gray-500">Completed</p>
+                    <p id="completedTasks" class="text-xl font-bold text-green-600">0</p>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex justify-center gap-2 mb-5">
+                <button
+                    onclick="setFilter('all')"
+                    id="allBtn"
+                    class="filter-btn bg-blue-600 text-white px-4 py-2 rounded-lg"
+                >
+                    All
+                </button>
+
+                <button
+                    onclick="setFilter('active')"
+                    id="activeBtn"
+                    class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
+                >
+                    Active
+                </button>
+
+                <button
+                    onclick="setFilter('completed')"
+                    id="completedBtn"
+                    class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
+                >
+                    Completed
+                </button>
+            </div>
+
+            <!-- Task List -->
+            <div id="taskList" class="space-y-3"></div>
+
+            <!-- Empty Message -->
+            <p
+                id="emptyMessage"
+                class="text-center text-gray-500 py-6 hidden"
+            >
+                No tasks found. Add a new task!
+            </p>
+
+        </div>
+    </div>
+
+    <script>
+        let tasks = [];
+        let currentFilter = "all";
+
+        const taskForm = document.getElementById("taskForm");
+        const taskInput = document.getElementById("taskInput");
+        const categoryInput = document.getElementById("categoryInput");
+        const taskList = document.getElementById("taskList");
+        const emptyMessage = document.getElementById("emptyMessage");
+
+        // Add a new task
+        taskForm.addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const taskText = taskInput.value.trim();
+            const category = categoryInput.value;
+
+            if (taskText === "") {
+                return;
+            }
+
+            const task = {
+                id: Date.now(),
+                text: taskText,
+                category: category,
+                completed: false
+            };
+
+            tasks.push(task);
+
+            taskInput.value = "";
+
+            renderTasks();
+        });
+
+        // Mark task as completed/uncompleted
+        function toggleTask(id) {
+            tasks = tasks.map(task => {
+                if (task.id === id) {
+                    task.completed = !task.completed;
+                }
+
+                return task;
+            });
+
+            renderTasks();
+        }
+
+        // Delete task
+        function deleteTask(id) {
+            tasks = tasks.filter(task => task.id !== id);
+
+            renderTasks();
+        }
+
+        // Change filter
+        function setFilter(filter) {
+            currentFilter = filter;
+
+            document.querySelectorAll(".filter-btn").forEach(button => {
+                button.classList.remove("bg-blue-600", "text-white");
+                button.classList.add("bg-gray-200", "text-gray-700");
+            });
+
+            const selectedButton = document.getElementById(
+                filter === "all"
+                    ? "allBtn"
+                    : filter === "active"
+                    ? "activeBtn"
+                    : "completedBtn"
+            );
+
+            selectedButton.classList.remove("bg-gray-200", "text-gray-700");
+            selectedButton.classList.add("bg-blue-600", "text-white");
+
+            renderTasks();
+        }
+
+        // Display tasks
+        function renderTasks() {
+            taskList.innerHTML = "";
+
+            let filteredTasks = tasks;
+
+            if (currentFilter === "active") {
+                filteredTasks = tasks.filter(task => !task.completed);
+            }
+
+            if (currentFilter === "completed") {
+                filteredTasks = tasks.filter(task => task.completed);
+            }
+
+            if (filteredTasks.length === 0) {
+                emptyMessage.classList.remove("hidden");
+            } else {
+                emptyMessage.classList.add("hidden");
+            }
+
+            filteredTasks.forEach(task => {
+
+                const taskElement = document.createElement("div");
+
+                taskElement.className =
+                    "flex items-center justify-between gap-3 p-4 " +
+                    "border border-gray-200 rounded-xl bg-gray-50 " +
+                    "hover:shadow-md transition";
+
+                const categoryColor =
+                    task.category === "Academic"
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-purple-100 text-purple-700";
+
+                taskElement.innerHTML = `
+                    <div class="flex items-center gap-3 min-w-0">
+
+                        <input
+                            type="checkbox"
+                            ${task.completed ? "checked" : ""}
+                            onchange="toggleTask(${task.id})"
+                            class="w-5 h-5 accent-green-600 cursor-pointer"
+                        >
+
+                        <div class="min-w-0">
+                            <p class="font-medium ${
+                                task.completed
+                                    ? "line-through text-gray-400"
+                                    : "text-gray-800"
+                            } break-words">
+                                ${escapeHTML(task.text)}
+                            </p>
+
+                            <span class="inline-block mt-1 px-2 py-1
+                                         text-xs rounded-full ${categoryColor}">
+                                ${task.category}
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <button
+                        onclick="deleteTask(${task.id})"
+                        class="text-red-500 hover:text-red-700
+                               hover:bg-red-100 p-2 rounded-lg transition"
+                        title="Delete task"
+                    >
+                        🗑️
+                    </button>
+                `;
+
+                taskList.appendChild(taskElement);
+            });
+
+            updateStatistics();
+        }
+
+        // Update task statistics
+        function updateStatistics() {
+            const total = tasks.length;
+            const completed = tasks.filter(task => task.completed).length;
+            const active = total - completed;
+
+            document.getElementById("totalTasks").textContent = total;
+            document.getElementById("activeTasks").textContent = active;
+            document.getElementById("completedTasks").textContent = completed;
+        }
+
+        // Prevent HTML injection when displaying user input
+        function escapeHTML(text) {
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initial display
+        renderTasks();
+    </script>
+
+</body>
+</html>
